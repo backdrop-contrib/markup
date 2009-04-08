@@ -1,0 +1,5 @@
+; $Id$
+name = Markup
+description = Defines a field type for markup.
+dependencies = content
+package = CCK
