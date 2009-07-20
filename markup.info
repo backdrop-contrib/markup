@@ -1,5 +1,6 @@
 ; $Id$
 name = Markup
 description = Defines a field type for markup.
-dependencies = content
+dependencies[] = content
+core = 6.x
 package = CCK
