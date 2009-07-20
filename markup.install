@@ -1,0 +1,48 @@
+<?php
+// $Id$
+/**
+ * @file
+ * Implementation of hook_install().
+ */
+function markup_install() {
+  drupal_load('module', 'content');
+  content_notify('install', 'markup');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function markup_uninstall() {
+  drupal_load('module', 'content');
+  content_notify('uninstall', 'markup');
+}
+
+/**
+ * Implementation of hook_enable().
+ *
+ * Notify content module when this module is enabled.
+ */
+function markup_enable() {
+  drupal_load('module', 'content');
+  content_notify('enable', 'markup');
+}
+
+/**
+ * Implementation of hook_disable().
+ *
+ * Notify content module when this module is disabled.
+ */
+function markup_disable() {
+  drupal_load('module', 'content');
+  content_notify('disable', 'markup');
+}
+// Convert text_markup setting to markup since form_markup module no longer uses markup setting in d6.
+function markup_update_6000() {
+  $ret = array();
+  $markups = db_query("SELECT * FROM {content_node_field} WHERE type = 'markup'");
+  while ($markup = db_fetch_array($markups)) {
+    //db_query instead of update_sql needs used for serialized data
+    db_query("UPDATE {content_node_field} SET global_settings = '%s' WHERE field_name = '%s'", str_replace('s:11:"text_markup"', 's:6:"markup"', $markup['global_settings']), $markup['field_name']);
+  }
+  return $ret;
+}
