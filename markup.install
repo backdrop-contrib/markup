@@ -36,13 +36,36 @@ function markup_disable() {
   drupal_load('module', 'content');
   content_notify('disable', 'markup');
 }
-// Convert text_markup setting to markup since form_markup module no longer uses markup setting in d6.
+/**
+* Convert text_markup setting to markup since form_markup module no longer
+* uses markup setting in D6.
+*/
 function markup_update_6000() {
   $ret = array();
-  $markups = db_query("SELECT * FROM {content_node_field} WHERE type = 'markup'");
-  while ($markup = db_fetch_array($markups)) {
-    //db_query instead of update_sql needs used for serialized data
-    db_query("UPDATE {content_node_field} SET global_settings = '%s' WHERE field_name = '%s'", str_replace('s:11:"text_markup"', 's:6:"markup"', $markup['global_settings']), $markup['field_name']);
+
+  $rebuild_cache = FALSE;
+  $result = db_query("SELECT * FROM {content_node_field} WHERE type = 'markup'");
+  while ($markup = db_fetch_object($result)) {
+    $global_settings = unserialize($markup->global_settings);
+    if (isset($global_settings['text_markup'])) {
+      $global_settings['markup'] = $global_settings['text_markup'];
+      unset($global_settings['text_markup']);
+
+      // We can't use update_sql() here because of curly braces in serialized
+      // array.
+      db_query("UPDATE {content_node_field} SET global_settings = '%s' WHERE field_name = '%s'", serialize($global_settings), $markup->field_name);
+      $ret[] = array(
+        'success' => TRUE,
+        'query' => strtr('Settings updated for field %field', array('%field' => check_plain($markup->field_name))),
+      );
+      $rebuild_cache = TRUE;
+    }
   }
+
+  // Rebuild content caches only if necessary.
+  if ($rebuild_cache) {
+    content_clear_type_cache();
+  }
+
   return $ret;
 }
