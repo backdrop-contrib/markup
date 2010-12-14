@@ -32,7 +32,7 @@ function markup_field_settings($op, $field) {
       );
       $form['instructions'] = array(
         '#type' => 'markup',
-        '#value' => htmlentities(t('This is a special field. It will output the markup below, unfiltered by the system, on the node/edit form for this content type. Consider wrapping any visible output in <div class="form-item"></div> to follow form standards.')),
+        '#value' => htmlentities(t('This is a special field. It will output the markup below, unfiltered by the system, on the node/edit form for this content type.')),
         '#weight' => -1,
       );
       return $form;
@@ -61,6 +61,73 @@ function markup_widget_info() {
 }
 
 /**
+ * Implementation of hook_widget_settings().
+ */
+function markup_widget_settings($op, $widget) {
+  switch ($op) {
+    case 'form':
+      $form = array();
+
+      $form['display_style'] = array(
+        '#type' => 'radios',
+        '#title' => t('Display Style'),
+        '#default_value' => !empty($widget['display_style']) ? $widget['display_style'] : '',
+        '#options' => array(
+          'none' => t('Hide Field Wrapper & Label'),
+          'wrapper' => t('Display Field Wrapper & Hide Label'),
+          'all' => t('Display Field Wrapper & Label'),
+        ),
+        '#required' => TRUE,
+        '#description' => 
+          t('Choose how the markup field should be displayed on the node form.') .
+          '<br />' .
+          htmlentities(t('A field wrapper consists of a <div class="form-item"></div> wrapper around the markup to follow form standards.')),
+      );
+
+      return $form;
+
+    case 'save':
+      return array('display_style');
+  }
+}
+
+/**
+ * Implementation of FAPI hook_elements().
+ *
+ * Any FAPI callbacks needed for individual widgets can be declared here,
+ * and the element will be passed to those callbacks for processing.
+ *
+ * Drupal will automatically theme the element using a theme with
+ * the same name as the hook_elements key.
+ */
+function markup_elements() {
+  return array(
+    'markup_widget' => array(
+      '#input' => TRUE,
+      '#process' => array('markup_widget_process'),
+    ),
+    'markup_element' => array(
+       '#input' => TRUE,
+       '#process' => array('markup_element_process'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function markup_theme() {
+  return array(
+    'markup_widget' => array(
+      'arguments' => array('element' => NULL),
+    ),
+    'markup_element' => array(
+      'arguments' => array('element' => NULL),
+    ),
+  );
+}
+
+/**
  * Implementation of hook_content_multigroup_allowed_widgets().
  */
 function markup_content_multigroup_allowed_widgets() {
@@ -78,11 +145,59 @@ function markup_content_multigroup_no_remove_widgets() {
  * Implementation of hook_widget().
  */
 function markup_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  $element['markup'] = array(
-    '#type' => 'markup',
-    '#title' => '',
-    '#value' => $field['markup'],
+  $element = array(
+    '#type' => 'markup_widget',
+    '#markup' => $field['markup'],
   );
+  
+  return $element;
+}
+
+/**
+ * Process an individual element.
+ *
+ * Build the form element. When creating a form using FAPI #process,
+ * note that $element['#value'] is already set.
+ *
+ * The $fields array is in $form['#field_info'][$element['#field_name']].
+ */
+function markup_element_process($element, $edit, $form_state, $form) {
+  return $element;
+}
+
+/**
+ * Process an individual element.
+ *
+ * Build the form element. When creating a form using FAPI #process,
+ * note that $element['#value'] is already set.
+ *
+ * The $fields array is in $form['#field_info'][$element['#field_name']].
+ */
+function markup_widget_process($element, $edit, $form_state, $form) {
+  $field = $form['#field_info'][$element['#field_name']];
+
+  // Find out which display_style we are using and whether we need to hide the
+  // title and/or wrapper.
+  $display_style = !empty($field['widget']['display_style']) ? $field['widget']['display_style'] : 'none';
+  $hide_wrapper = 0;
+
+  if ($display_style == 'wrapper') {
+    unset ($element['#title']);
+  }
+  if ($display_style == 'none') {
+    unset ($element['#title']);
+    $hide_wrapper = 1;
+  }
+
+  $markup = $element['#markup'];
+
+  $element['markup'] = array(
+    '#type' => 'markup_element',
+    '#title' => $element['#title'],
+    '#value' => $markup,
+    '#hide_wrapper' => $hide_wrapper,
+  );
+
   return $element;
 }
 
@@ -91,7 +206,6 @@ function markup_widget(&$form, &$form_state, $field, $items, $delta = 0) {
  */
 function markup_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'content_field_edit_form' && $form['module']['#value'] == 'markup') {
-    $form['widget']['label']['#description'] = t('This label is for internal use. If you would like to put a headline on your form markup, you should put HTML for that in the markup area itself.');
     // Remove non-applicable fields on the widget settings form.
     unset($form['widget']['description']);
     unset($form['field']['required']);
@@ -105,4 +219,24 @@ function markup_form_alter(&$form, $form_state, $form_id) {
  */
 function markup_content_is_empty($item, $field) {
   return TRUE;
+}
+
+/**
+ * FAPI theme for an individual elements.
+ *
+ */
+
+function theme_markup_widget($element) {
+  return $element['#children'];
+}
+
+function theme_markup_element($element) {
+  $value = (isset($element['#value']) ? $element['#value'] : '') . (isset($element['#children']) ? $element['#children'] : '');
+
+  if ($element['#hide_wrapper']) {
+    return $value;
+  }
+  else {
+    return theme('form_element', $element,  $value);
+  }
 }

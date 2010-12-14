@@ -69,3 +69,18 @@ function markup_update_6000() {
 
   return $ret;
 }
+
+/**
+ * Rebuild theme registry.
+ */
+function markup_update_6100() {
+  $ret = array();
+
+  drupal_rebuild_theme_registry();
+  
+  $ret[] = array(
+      'query' => t('Theme Registry cleared.'),
+      'success' => TRUE,
+  );
+  return $ret;
+}
