@@ -32,7 +32,7 @@ function markup_field_settings($op, $field) {
       );
       $form['instructions'] = array(
         '#type' => 'markup',
-        '#value' => htmlentities(t('This is a special field. It will output the markup below, unfiltered by the system, on the node/edit form for this content type.')),
+        '#value' => t('This is a special field. It will output the markup below, unfiltered by the system, on the node/edit form for this content type.'),
         '#weight' => -1,
       );
       return $form;
