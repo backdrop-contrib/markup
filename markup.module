@@ -78,10 +78,10 @@ function markup_content_multigroup_no_remove_widgets() {
  * Implementation of hook_widget().
  */
 function markup_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  $element = array(
+  $element['markup'] = array(
     '#type' => 'markup',
     '#title' => '',
-    '#value' => $field['markup']
+    '#value' => $field['markup'],
   );
   return $element;
 }
