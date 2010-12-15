@@ -22,6 +22,11 @@ function markup_field_settings($op, $field) {
   switch ($op) {
     case 'form':
       $form = array();
+      $form['instructions'] = array(
+        '#type' => 'markup',
+        '#value' => t('This is a special field. It will output the markup below, unfiltered by the system, on the node/edit form for this content type.'),
+        '#weight' => -1,
+      );
       $form['markup'] = array(
         '#type' => 'textarea',
         '#title' => t('Markup'),
@@ -30,10 +35,11 @@ function markup_field_settings($op, $field) {
         '#rows' => 15,
         '#description' => t('The markup to be displayed. Any HTML is legal here, so be careful not to break your page layout.'),
       );
-      $form['instructions'] = array(
-        '#type' => 'markup',
-        '#value' => t('This is a special field. It will output the markup below, unfiltered by the system, on the node/edit form for this content type.'),
-        '#weight' => -1,
+      $form['allow_php_code'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Allow PHP Code?'),
+        '#default_value' => isset($field['allow_php_code']) ? $field['allow_php_code'] : '',
+        '#description' => t('Advanced usage only: Allow PHP code in the markup field above. Should include &lt;?php ?&gt; delimiters. You can access the current node object using $node.'),
       );
       return $form;
 
@@ -41,7 +47,7 @@ function markup_field_settings($op, $field) {
       break;
 
     case 'save':
-      return array('markup');
+      return array('markup', 'allow_php_code');
     case 'database columns':
       return array();
   }
@@ -154,19 +160,7 @@ function markup_widget(&$form, &$form_state, $field, $items, $delta = 0) {
 }
 
 /**
- * Process an individual element.
- *
- * Build the form element. When creating a form using FAPI #process,
- * note that $element['#value'] is already set.
- *
- * The $fields array is in $form['#field_info'][$element['#field_name']].
- */
-function markup_element_process($element, $edit, $form_state, $form) {
-  return $element;
-}
-
-/**
- * Process an individual element.
+ * Process the markup_widget element.
  *
  * Build the form element. When creating a form using FAPI #process,
  * note that $element['#value'] is already set.
@@ -191,14 +185,109 @@ function markup_widget_process($element, $edit, $form_state, $form) {
 
   $markup = $element['#markup'];
 
-  $element['markup'] = array(
-    '#type' => 'markup_element',
-    '#title' => $element['#title'],
-    '#value' => $markup,
-    '#hide_wrapper' => $hide_wrapper,
-  );
+  if (!empty($markup)) {
+    $element['markup'] = array(
+      '#type' => 'markup_element',
+      '#title' => $element['#title'],
+      '#markup' => $markup,
+      '#hide_wrapper' => $hide_wrapper,
+      '#allow_php_code' => $field['allow_php_code'],
+    );
+    
+    // Apply the output_callback attribute, if set, on to the child element.
+    if (!empty($element['#output_callback'])) {
+      $element['markup']['#output_callback'] = $element['#output_callback'];
+    }
+  }
 
   return $element;
+}
+
+/**
+ * Process the markup_element element.
+ *
+ * Build the form element. When creating a form using FAPI #process,
+ * note that $element['#value'] is already set.
+ *
+ * The $fields array is in $form['#field_info'][$element['#field_name']].
+ */
+function markup_element_process($element, $edit, $form_state, $form) {
+  $output = '';
+  $valid_callback = FALSE;
+
+  if (!empty($element['#output_callback'])) {
+    $callback = $element['#output_callback'];
+    if (function_exists($callback)) {
+      $valid_callback = TRUE;
+      $output = $callback($element, $field, $form_state);
+    }
+  }
+
+  if ($valid_callback) {
+    return $output;
+  }
+
+  // Check to see if the markup is empty, if so return element.
+  if (empty($element['#markup'])) {
+    return $element;
+  }
+
+  // Check to see if there is a php value set, if so evaluate the code.
+  if (!empty($element['#allow_php_code'])) {
+    $node = array();
+    // Check we are on a node edit form.
+    if (isset($form_state['values']['nid']) || isset($form_state['values']['type'])) {
+      // Build a node element from the $form_state
+      include_once(drupal_get_path('module', 'node') .'/node.pages.inc');
+      $node = node_form_submit_build_node($form, $form_state);
+    }
+    // Evaluate the php code, and pass in the $node object.
+    $element['#value'] = markup_eval($element['#markup'], array('node' => $node));
+  }
+  else {
+    $element['#value'] = $element['#markup'];
+  }
+
+  return $element;
+}
+
+/**
+ * Prepare and evaluate of a string of PHP code.
+ *
+ * This method is mostly a copy of drupal_eval().
+ *
+ * @param string $code
+ * @param array $arguments
+ * @return string
+ */
+function markup_eval($code, $arguments = array()) {
+  global $theme_path, $theme_info, $conf;
+
+  // Extract the arguments and make available.
+  extract($arguments);
+
+  // Store current theme path.
+  $old_theme_path = $theme_path;
+
+  // Restore theme_path to the theme, as long as drupal_eval() executes,
+  // so code evaluted will not see the caller module as the current theme.
+  // If theme info is not initialized get the path from theme_default.
+  if (!isset($theme_info)) {
+    $theme_path = drupal_get_path('theme', $conf['theme_default']);
+  }
+  else {
+    $theme_path = dirname($theme_info->filename);
+  }
+
+  // Evaluate the php code
+  ob_start();
+  print eval('?>'. $code);
+  $output = ob_get_clean();
+
+  // Recover original theme path.
+  $theme_path = $old_theme_path;
+
+  return $output;
 }
 
 /**
