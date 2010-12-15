@@ -297,6 +297,7 @@ function markup_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'content_field_edit_form' && $form['module']['#value'] == 'markup') {
     // Remove non-applicable fields on the widget settings form.
     unset($form['widget']['description']);
+    unset($form['widget']['default_value_fieldset']['advanced_options']);
     unset($form['field']['required']);
     unset($form['field']['multiple']);
     unset($form['field']['#description']);
