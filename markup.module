@@ -236,7 +236,7 @@ function markup_element_process($element, $edit, $form_state, $form) {
   if (!empty($element['#allow_php_code'])) {
     $node = array();
     // Check we are on a node edit form.
-    if (isset($form_state['values']['nid']) || isset($form_state['values']['type'])) {
+    if ($form['#id'] == 'node-form') {
       // Build a node element from the $form_state
       include_once(drupal_get_path('module', 'node') .'/node.pages.inc');
       $node = node_form_submit_build_node($form, $form_state);
