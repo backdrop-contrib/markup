@@ -8,6 +8,7 @@ The development branch introduces new features for the module. Notes below detai
 - Introduce new hook_elements, hook_theme implementations to provide new form api elements - markup_widget & markup_element, to give more control over themeing.
 - Add Display Style setting to allow a choice over whether the markup field gets shown with/without a field wrapper and label.
 - Add Ability to execute php code in the markup field.
+- New companion module, markup_view for embedding a view on the node edit form.
 
 6.x-1.0 (2010-12-14)
 ====================
