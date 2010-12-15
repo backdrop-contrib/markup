@@ -48,6 +48,7 @@ function markup_field_settings($op, $field) {
 
     case 'save':
       return array('markup', 'allow_php_code');
+    
     case 'database columns':
       return array();
   }
@@ -169,35 +170,49 @@ function markup_widget(&$form, &$form_state, $field, $items, $delta = 0) {
  */
 function markup_widget_process($element, $edit, $form_state, $form) {
   $field = $form['#field_info'][$element['#field_name']];
+  $markup = '';
 
-  // Find out which display_style we are using and whether we need to hide the
-  // title and/or wrapper.
-  $display_style = !empty($field['widget']['display_style']) ? $field['widget']['display_style'] : 'none';
-  $hide_wrapper = 0;
-
-  if ($display_style == 'wrapper') {
-    unset ($element['#title']);
+  $valid_callback = FALSE;
+  
+  // Check to see if we have a markup callback, if so execute it.
+  if (!empty($element['#markup_callback'])) {
+    $callback = $element['#markup_callback'];
+    if (function_exists($callback)) {
+      $valid_callback = TRUE;
+      $markup = $callback($element, $field, $form_state);
+    }
   }
-  if ($display_style == 'none') {
-    unset ($element['#title']);
-    $hide_wrapper = 1;
-  }
 
-  $markup = $element['#markup'];
+  if (!$valid_callback) {
+    // Check to see if the markup is empty, if so return element.
+    if (empty($element['#markup'])) {
+      return $element;
+    }
+    // Check to see if there is a php value set, if so evaluate the code.
+    if (!empty($field['allow_php_code'])) {
+      $node = array();
+      // Check we are on a node edit form.
+      if ($form['#id'] == 'node-form') {
+        // Build a node element from the $form_state
+        include_once(drupal_get_path('module', 'node') .'/node.pages.inc');
+        $node = node_form_submit_build_node($form, $form_state);
+      }
+      // Evaluate the php code, and pass in the $node object.
+      $markup = markup_eval($element['#markup'], array('node' => $node));
+    }
+    else {
+      $markup = $element['#markup'];
+    }
+  }
 
   if (!empty($markup)) {
-    $element['markup'] = array(
+    $element['element'] = array(
       '#type' => 'markup_element',
       '#title' => $element['#title'],
-      '#markup' => $markup,
-      '#hide_wrapper' => $hide_wrapper,
-      '#allow_php_code' => $field['allow_php_code'],
+      '#value' => $markup,
+      '#display_style' => $field['widget']['display_style'],
     );
     
-    // Apply the output_callback attribute, if set, on to the child element.
-    if (!empty($element['#output_callback'])) {
-      $element['markup']['#output_callback'] = $element['#output_callback'];
-    }
   }
 
   return $element;
@@ -213,41 +228,24 @@ function markup_widget_process($element, $edit, $form_state, $form) {
  */
 function markup_element_process($element, $edit, $form_state, $form) {
   $output = '';
-  $valid_callback = FALSE;
+  
+  // Find out which display_style we are using and whether we need to hide the
+  // title and/or wrapper.
+  switch ($element['#display_style']) {
+    case 'all':
+      break;
 
-  if (!empty($element['#output_callback'])) {
-    $callback = $element['#output_callback'];
-    if (function_exists($callback)) {
-      $valid_callback = TRUE;
-      $output = $callback($element, $field, $form_state);
-    }
-  }
+    case 'wrapper':
+      unset ($element['#title']);
+      break;
 
-  if ($valid_callback) {
-    return $output;
+    case 'none':
+    default:
+      unset ($element['#title']);
+      $element['#hide_wrapper'] = 1;
+      break;
   }
-
-  // Check to see if the markup is empty, if so return element.
-  if (empty($element['#markup'])) {
-    return $element;
-  }
-
-  // Check to see if there is a php value set, if so evaluate the code.
-  if (!empty($element['#allow_php_code'])) {
-    $node = array();
-    // Check we are on a node edit form.
-    if ($form['#id'] == 'node-form') {
-      // Build a node element from the $form_state
-      include_once(drupal_get_path('module', 'node') .'/node.pages.inc');
-      $node = node_form_submit_build_node($form, $form_state);
-    }
-    // Evaluate the php code, and pass in the $node object.
-    $element['#value'] = markup_eval($element['#markup'], array('node' => $node));
-  }
-  else {
-    $element['#value'] = $element['#markup'];
-  }
-
+  
   return $element;
 }
 
