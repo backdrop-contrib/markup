@@ -1,0 +1,6 @@
+; $Id$
+name = Markup View
+description = Defines a field type to embed a view on the node form.
+dependencies[] = content
+core = 6.x
+package = CCK
