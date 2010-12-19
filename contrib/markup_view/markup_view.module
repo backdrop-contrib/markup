@@ -195,9 +195,9 @@ function markup_view_process($element, $edit, $form_state, $form) {
 
   
   if ($view && $view->access($display_id)) {
-    $args = markup_view_get_arguments($element, $field, $form_state);
+    $args = markup_view_get_arguments($element, $field, $form_state, $form);
     $view->set_display($display_id);
-    if (!empty($args)) {
+    if (!empty($args) && is_array($args)) {
       $view->set_arguments($args);
     }
     // We don't want to be able to navigate away from the form so set ajax to be on
@@ -254,7 +254,7 @@ function markup_view_content_is_empty($item, $field) {
  * @param array $form_state
  * @return array
  */
-function markup_view_get_arguments($element, $field, $form_state) {
+function markup_view_get_arguments($element, $field, $form_state, $form) {
   $args = array();
   $valid_callback = FALSE;
 
@@ -262,7 +262,10 @@ function markup_view_get_arguments($element, $field, $form_state) {
     $callback = $element['#argument_callback'];
     if (function_exists($callback)) {
       $valid_callback = TRUE;
-      $args = $callback($element, $field, $form_state);
+      $args = $callback($element, $field, $form_state, $form);
+      if (is_string($args)) {
+        $args = explode(',', $args);
+      }
     }
   }
   
