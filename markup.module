@@ -177,9 +177,10 @@ function markup_widget_process($element, $edit, $form_state, $form) {
   // Check to see if we have a markup callback, if so execute it.
   if (!empty($element['#markup_callback'])) {
     $callback = $element['#markup_callback'];
+
     if (function_exists($callback)) {
       $valid_callback = TRUE;
-      $markup = $callback($element, $field, $form_state);
+      $markup = $callback($element, $field, $form_state, $form);
     }
   }
 
@@ -194,8 +195,7 @@ function markup_widget_process($element, $edit, $form_state, $form) {
       // Check we are on a node edit form.
       if ($form['#id'] == 'node-form') {
         // Build a node element from the $form_state
-        include_once(drupal_get_path('module', 'node') .'/node.pages.inc');
-        $node = node_form_submit_build_node($form, $form_state);
+        $node = markup_build_node($form, $form_state);
       }
       // Evaluate the php code, and pass in the $node object.
       $markup = markup_eval($element['#markup'], array('node' => $node));
@@ -327,4 +327,16 @@ function theme_markup_element($element) {
   else {
     return theme('form_element', $element,  $value);
   }
+}
+
+/**
+ * Build a node by processing submitted form values.
+ */
+function markup_build_node($form, $form_state) {
+  // Unset any button-level handlers, execute all the form-level submit
+  // functions to process the form values into an updated node.
+  unset($form_state['submit_handlers']);
+  form_execute_handlers('submit', $form, $form_state);
+  $node = node_submit($form_state['values']);
+  return $node;
 }
