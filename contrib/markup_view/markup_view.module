@@ -158,9 +158,9 @@ function markup_view_content_multigroup_no_remove_widgets() {
 function markup_view_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   $element = array(
     '#type' => 'markup_view',
-    '#markup' => $field['markup'],
+    '#view' => $field['view'],
+    '#value' => array(),
   );
-  
   return $element;
 }
 
@@ -174,7 +174,6 @@ function markup_view_widget(&$form, &$form_state, $field, $items, $delta = 0) {
  */
 function markup_view_process($element, $edit, $form_state, $form) {
   $field = $form['#field_info'][$element['#field_name']];
-
   // Retrieve selected view key.
   $view_key = $field['view'];
 
@@ -189,13 +188,14 @@ function markup_view_process($element, $edit, $form_state, $form) {
   if (empty($view_name) || empty($display_id)) {
     return $element;
   }
-  
+
   // Retrieve view object.
   $view = views_get_view($view_name);   
 
   
   if ($view && $view->access($display_id)) {
     $args = markup_view_get_arguments($element, $field, $form_state, $form);
+    
     $view->set_display($display_id);
     if (!empty($args) && is_array($args)) {
       $view->set_arguments($args);
@@ -212,14 +212,13 @@ function markup_view_process($element, $edit, $form_state, $form) {
       $title = $element['#title'];
     }
 
-    if (!empty($markup)) {
-      $element['element'] = array(
-        '#type' => 'markup_element',
-        '#title' => $title,
-        '#value' => $markup,
-        '#display_style' => $field['widget']['display_style'],
-      );
-    }
+    $element['element'] = array(
+      '#type' => 'markup_element',
+      '#title' => $title,
+      '#markup' => $markup,
+      '#value' => array(),
+      '#display_style' => $field['widget']['display_style'],
+    );
   }
 
   return $element;

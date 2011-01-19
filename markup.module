@@ -131,8 +131,8 @@ function markup_elements() {
       '#process' => array('markup_widget_process'),
     ),
     'markup_element' => array(
-       '#input' => TRUE,
-       '#process' => array('markup_element_process'),
+      '#input' => TRUE,
+      '#process' => array('markup_element_process'),
     ),
   );
 }
@@ -172,6 +172,7 @@ function markup_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   $element = array(
     '#type' => 'markup_widget',
     '#markup' => $field['markup'],
+    '#value' => array(),
   );
   
   return $element;
@@ -226,8 +227,9 @@ function markup_widget_process($element, $edit, $form_state, $form) {
     $element['element'] = array(
       '#type' => 'markup_element',
       '#title' => $element['#title'],
-      '#value' => $markup,
+      '#markup' => $markup,
       '#display_style' => $field['widget']['display_style'],
+      '#value' => array(),
     );
     
   }
@@ -245,7 +247,6 @@ function markup_widget_process($element, $edit, $form_state, $form) {
  */
 function markup_element_process($element, $edit, $form_state, $form) {
   $output = '';
-  
   // Find out which display_style we are using and whether we need to hide the
   // title and/or wrapper.
   switch ($element['#display_style']) {
@@ -336,7 +337,7 @@ function theme_markup_widget($element) {
 }
 
 function theme_markup_element($element) {
-  $value = (isset($element['#value']) ? $element['#value'] : '') . (isset($element['#children']) ? $element['#children'] : '');
+  $value = (isset($element['#markup']) ? $element['#markup'] : '') . (isset($element['#children']) ? $element['#children'] : '');
 
   if ($element['#hide_wrapper']) {
     return $value;
