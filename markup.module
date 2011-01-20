@@ -223,16 +223,13 @@ function markup_widget_process($element, $edit, $form_state, $form) {
     }
   }
 
-  if (!empty($markup)) {
-    $element['element'] = array(
-      '#type' => 'markup_element',
-      '#title' => $element['#title'],
-      '#markup' => $markup,
-      '#display_style' => $field['widget']['display_style'],
-      '#value' => array(),
-    );
-    
-  }
+  $element['element'] = array(
+    '#type' => 'markup_element',
+    '#title' => $element['#title'],
+    '#markup' => $markup,
+    '#display_style' => $field['widget']['display_style'],
+    '#value' => array(),
+  );
 
   return $element;
 }
