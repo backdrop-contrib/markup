@@ -171,6 +171,7 @@ function markup_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   $element = array(
     '#type' => 'markup_widget',
     '#markup' => $field['markup'],
+    '#markup_php' => $field['markup_php'],
     '#value' => array(),
   );
   
@@ -202,12 +203,8 @@ function markup_widget_process($element, $edit, $form_state, $form) {
   }
 
   if (!$valid_callback) {
-    // Check to see if the markup is empty, if so return element.
-    if (empty($element['#markup'])) {
-      return $element;
-    }
     // Check to see if there is a php value set, if so evaluate the code.
-    if (!empty($field['markup_php'])) {
+    if (!empty($element['#markup_php'])) {
       $node = array();
       // Check we are on a node edit form.
       if ($form['#id'] == 'node-form') {
@@ -217,8 +214,12 @@ function markup_widget_process($element, $edit, $form_state, $form) {
       // Evaluate the php code, and pass in the $node object.
       $markup = markup_eval($field['markup_php'], array('node' => $node));
     }
-    else {
+    else if (!empty($element['#markup'])) {
       $markup = $element['#markup'];
+    }
+    else {
+      // Check to see if the markup is empty, if so return element.
+      return $element;
     }
   }
 
@@ -259,6 +260,7 @@ function markup_element_process($element, $edit, $form_state, $form) {
       $element['#hide_wrapper'] = 1;
       break;
   }
+
   
   return $element;
 }
