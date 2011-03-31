@@ -45,7 +45,7 @@ function markup_field_settings($op, $field) {
           '#title' => t('Code'),
           '#default_value' => !empty($field['markup_php']) ? $field['markup_php'] : '',
           '#rows' => 8,
-          '#description' => t('Advanced usage only: PHP code to replace HTML in the Markup field above. Should include &lt;?php ?&gt; delimiters. You can access the current node object using $node.'),
+          '#description' => t('Advanced usage only: PHP code to replace HTML in the Markup field above. Should include &lt;?php ?&gt; delimiters. You can access the current node object using $node. Use print or echo to output the text to display.'),
         );
       }
       else {
