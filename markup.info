@@ -1,9 +1,6 @@
-; $Id: 
 name = Markup
 description = Defines a field type for markup.
 core = 7.x
 dependencies[] = field
-package = Field
-files[]=markup.module
-version = "7.x-1.x-dev"
+package = Fields
 
