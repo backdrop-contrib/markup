@@ -114,6 +114,10 @@ function markup_field_widget_info() {
  * Implementation of hook_field_widget_form().
  */
 function markup_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  // setting default field value if it is not set yet.
+  if (!isset($field['settings']['markup']['value'])) {
+    $field['settings']['markup']['value'] = '';
+  }
   $element += array(
     'markup' => array(
       '#markup' => check_markup($field['settings']['markup']['value'], $field['settings']['markup']['format']),
