@@ -1,5 +1,4 @@
 <?php
-// $Id$:
 
 /**
  * @file
@@ -13,7 +12,7 @@ function markup_field_info() {
   return array(
     'markup' => array(
       'label' => 'Markup',
-      'description' => t('Provides field to output markup on the entitys edit form'),
+      'description' => t('Provides field to output markup on the entities edit form'),
       'default_widget' => 'markup',
       'default_formatter' => 'markup_default',
       'settings' => array(
