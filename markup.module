@@ -34,9 +34,14 @@ function markup_field_formatter_info() {
       'description' => t('Markup will only be displayed when a user is on the edit page.'),
       'field types' => array('markup'),
     ),
+    'markup_display' => array(
+      'label' => t('Display only'),
+      'description' => t('Markup will only be displayed when a user is viewing the entity.'),
+      'field types' => array('markup'),
+    ),
     'markup_view' => array(
       'label' => t('Always visible'),
-      'description' => t('Displays the markup while viewing the entity (in addition to the edit form).'),
+      'description' => t('Displays the markup on the edit form and on the entity display.'),
       'field types' => array('markup'),
     ),
   );
@@ -53,8 +58,9 @@ function markup_field_formatter_prepare_view($entity_type, $entities, $field, $i
   // Set item value to markup for all to-be-displayed markup.
   foreach ($items as $eid => $item) {
     $instance = $instances[$eid];
-    if ($instance['display']['default']['type'] == 'markup_view') {
-      // Since markup is always a single item, add to the first item.
+    if (in_array($instance['display']['default']['type'], ['markup_view', 'markup_display'])) {
+      // Add to display form in 'Always visible' and 'Display only' formatter.
+      // Since markup is always a single item, add to the first item:
       $items[$eid][0]['markup'] = markup_translate_instance($field, $instance);
     }
   }
@@ -117,11 +123,15 @@ function markup_field_widget_form(&$form, &$form_state, $field, $instance, $lang
   if (!isset($field['settings']['markup']['value'])) {
     $field['settings']['markup']['value'] = '';
   }
-  $element += array(
-    'markup' => array(
-      '#markup' => markup_translate_instance($field, $instance),
-    ),
-  );
+  if (in_array($instance['display']['default']['type'], ['markup_view', 'markup_default'])) {
+    // Add to display form in 'Always visible' and 'Edit form only' formatter.
+    $element += array(
+      'markup' => array(
+        '#markup' => markup_translate_instance($field, $instance),
+      ),
+    );
+  }
+  
   return $element;
 }
 
