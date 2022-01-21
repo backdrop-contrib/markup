@@ -1,0 +1,20 @@
+This module adds the ability for site admins to add "Markup" widgets to the 
+form. These essentially let designers of content-types insert additional 
+markup into the node/edit form to display to content-authors. This is the 
+equivalent of adding additional elements to $form of the type '#markup'.
+
+Please, offer feedback and ideas in the issue queue.
+
+Pull Requests are welcome.
+
+## Installation
+
+Install this module using the official Backdrop CMS instructions at backdropcms.org/guide/modules.
+
+## Current maintainers
+
+- [Tim Erickson](https://github.com/stpaultim) - [Simplo](https://www.simplo.site) by [Triplo](https://www.triplo.co)
+
+## License
+
+This project is GPL v2 software. See the LICENSE.txt file in this directory for complete text.
