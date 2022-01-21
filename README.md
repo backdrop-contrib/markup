@@ -9,9 +9,17 @@ Please, offer feedback and ideas in the issue queue.
 
 Pull Requests are welcome.
 
+## Status
+
+We ran this module through coder upgrade and it worked pretty much as it was. 
+We will initially mark this module as an alpha release and welcome testing
+and feedback. But, it's a pretty simple module, so we expect it will work 
+fine. 
+
 ## Installation
 
-Install this module using the official Backdrop CMS instructions at backdropcms.org/guide/modules.
+Install this module using the official Backdrop CMS instructions at 
+backdropcms.org/guide/modules.
 
 ## Current maintainers
 
