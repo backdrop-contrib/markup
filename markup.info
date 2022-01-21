@@ -1,5 +1,6 @@
 name = Markup
 description = Defines a field type for markup.
-core = 7.x
+backdrop = 1.x
+type = module
 dependencies[] = field
 package = Fields
