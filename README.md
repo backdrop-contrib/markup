@@ -12,9 +12,10 @@ Pull Requests are welcome.
 ## Status
 
 We ran this module through coder upgrade and it worked pretty much as it was. 
-We will initially mark this module as an alpha release and welcome testing
-and feedback. But, it's a pretty simple module, so we expect it will work 
-fine. 
+We are removing the "alpha" status as no problems have been reported. 
+
+We have not written the upgrade hooks for Drupal - Backdrop upgrades.
+Please, open an issue in the issue queue if you think these are needed.
 
 ## Installation
 
